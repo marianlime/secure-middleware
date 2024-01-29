@@ -1,5 +1,5 @@
 package securemiddleware
 
 import(
-	"packages/auth"
+	"authentication/auth"
 )
