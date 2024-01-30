@@ -16,3 +16,13 @@ func keyGenerator() ([]byte, error){
 	return key, nil
 }
 
+func DataEncryption(plainText []byte, key []byte) ([]byte, error){
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	
+
+}
