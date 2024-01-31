@@ -8,7 +8,7 @@ import(
 	"io"
 )
 
-func keyGenerator() ([]byte, error){
+func KeyGenerator() ([]byte, error){
 	key := make([]byte, 32)
 	if _,err := rand.Read(key); err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func DataDecryption(cipherText []byte, key []byte) ([]byte, error){
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if len(cipherText) < gcm.NonceSize(){
 		return nil, errors.New("cipherText too short")
 	}
