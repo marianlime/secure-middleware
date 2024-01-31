@@ -39,7 +39,7 @@ func RoleMiddleware(requiredRole string) func(http.HandlerFunc) http.HandlerFunc
 					return
 				}
 
-				if claims, ok := token.Claims.(*CustomClaims); ok && token.valid{
+				if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid{
 					if claims.Role == requiredRole {
 						next.ServeHTTP(w, r)
 						return
