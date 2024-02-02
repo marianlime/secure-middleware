@@ -5,13 +5,14 @@ import(
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 )
 
 func KeyGenerator() ([]byte, error){
 	key := make([]byte, 32)
 	if _,err := rand.Read(key); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create new key: %w", err)
 	}
 	return key, nil
 }
