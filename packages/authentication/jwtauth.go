@@ -33,7 +33,6 @@ func RoleMiddleware(requiredRole string) func(http.HandlerFunc) http.HandlerFunc
 					return []byte("Secret"), nil
 				})
 
-
 				if err != nil {
 					http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
 					return
