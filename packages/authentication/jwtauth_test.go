@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 	"time"
 	"github.com/golang-jwt/jwt"
@@ -56,7 +55,7 @@ func TestGenerateTokenWithDifferentRoles(t *testing.T){
 func TestTokenExpiry(t *testing.T){
 	secretKey := "iJEwgdEGe2"
 	os.Setenv("secret_key", secretKey)
-	defer os.Unsetenv("secretKey")
+	defer os.Unsetenv("secret_key")
 	claims := CustomClaims{
 		Role: "admin",
 		StandardClaims: jwt.StandardClaims{
@@ -65,17 +64,22 @@ func TestTokenExpiry(t *testing.T){
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil {
+	if err != nil{
 		t.Fatalf("Failed to sign token: %v", err)
 	}
-	time.Sleep(2 * time.Second)
+	time.Sleep(7 * time.Second)
 
 	_, err = jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error){
 		return []byte(secretKey), nil
 	})
-	if err == nil || !strings.Contains(err.Error(), "token expired"){
-		t.Fatalf("Expected token to be expired")
+	if ve, ok := err.(*jwt.ValidationError); ok {
+		if ve.Errors&jwt.ValidationErrorExpired == 0 {
+			t.Fatalf("Expected token to be expired")
+		}
+	} else {
+		t.Fatalf("Expected token expiration error, got %v", err)
 	}
+	
 }
 
 func TestRoleMiddleware(t *testing.T) {
