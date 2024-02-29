@@ -1,23 +1,31 @@
-package crypto
+package encryption
 
 import (
 	"encoding/base64"
+	"encoding/hex"
+	"os"
 	"testing"
 )
 
+
 func TestKeyGenerator(t *testing.T){
-	key, err := KeyGenerator()
-	if err != nil{
-		t.Fatalf("KeyGenerator failed: %v", err)
+	os.Remove(keyFilepath)
+	KeyGenerator()
+
+	content, err := os.ReadFile(keyFilepath)
+	if err != nil {
+		t.Fatalf("failed to read key fil: %v", err)
 	}
-	if len(key) != 32 {
-		t.Errorf("Expected key length to be 32, instead got %d", len(key))
+	if _, err := hex.DecodeString(string(content)); err != nil {
+		t.Errorf("Stored key is not a valid hex: %v", err)
 	}
 }
 
 func TestDataEncryptionAndDecryption(t *testing.T){
 	originalText := []byte("Message")
-	key, _ := KeyGenerator()
+	KeyGenerator()
+	key, _ := RetrieveKey()
+	defer os.Remove(keyFilepath)
 
 	cipherText, err := DataEncryption(originalText, key)
 	if err != nil {
@@ -50,9 +58,11 @@ func TestInvalidKeyLength(t *testing.T){
 
 func TestUniqueCiphertextEncryption (t *testing.T){
 	plainText := []byte("Secret Message")
-	key, err := KeyGenerator()
+	KeyGenerator()
+	key, err := RetrieveKey()
+	defer os.Remove(keyFilepath)
 	if err != nil{
-		t.Fatalf("Failed to generate encryption key: %v", err)
+		t.Fatalf("Failed to retrieve encryption key: %v", err)
 	}
 
 	ciphertexts := make(map[string]bool)
