@@ -6,6 +6,7 @@ import (
 	"middleware/packages/authentication"
 	"middleware/packages/encryption"
 	"middleware/packages/logmon"
+	"middleware/proxy"
 	"net/http"
 )
 
@@ -14,7 +15,7 @@ func costumerEndpointHandler(w http.ResponseWriter, r  *http.Request){
 }
 
 func main(){
-	encryption.LoadEnv()
+	
 
 	key, err := encryption.KeyGenerator()
 	if err != nil {

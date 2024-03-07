@@ -1,3 +1,6 @@
+// The encryption package provides encryption and decryption functionaliities
+// Utiliizng the AES-256-GCM Algorithm. It allows for key generation as well as secure key storage,
+// as well as offering a simple API for encryption and decryption of data.
 package encryption
 
 import (
@@ -8,34 +11,47 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"log"
+	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 const keyFilepath = "./encryption_keys.txt"
 
-func KeyGenerator() {
+// The Key generator method generates a AES-256 encryption key and stores it in a text file with predefined roles.
+// The method returns an error for when the generation of the key has failed or writing it into the file has failed.
+func KeyGenerator()  error{
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
-		 log.Fatalf("failed to create new key: %v", err)
+		 return fmt.Errorf("failed to create new key: %v", err)
 	}
 
 	keyHex := hex.EncodeToString(key)
-	if err := os.WriteFile(keyFilepath, []byte(keyHex), 0600); err != nil {
-		log.Fatalf("Failed ot write key in file : %v", err)
+	if err := ioutil.WriteFile(keyFilepath, []byte(keyHex), 0600); err != nil {
+		return fmt.Errorf("failed to write key to file: %v", err)
 	}
-
+	return nil
 }
 
 func RetrieveKey() ([]byte, error){
-	keyHex, err := os.ReadFile(keyFilepath)
+	keyHex, err := ioutil.ReadFile(keyFilepath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read key from file: %v", err)
+		if os.IsNotExist(err){
+			fmt.Println("Key file not found, generating a new key")
+			if err := KeyGenerator(); err != nil {
+				return nil, fmt.Errorf("Failed to generate key: %v", err)
+			}
+			keyHex, err = ioutil.ReadFile(keyFilepath)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read the new key : %v", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to read key from file: %v", err)
+		}
 	}
 	key, err := hex.DecodeString(string(keyHex))
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode key provided : %v", err)
+		return nil, fmt.Errorf("failed to decode key: %v", err)
 	}
 	return key, nil
 }

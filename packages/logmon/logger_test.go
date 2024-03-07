@@ -3,15 +3,27 @@ package logger
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"errors"
+	"fmt"
+	"io"
+	"log"
+	"os"
 	"strings"
 	"testing"
 )
 
+func NewTestLogger(out io.Writer, level LogLevel, prefix string) * Logger {
+	logger := log.New(out, prefix, log.LstdFlags)
+	return &Logger{
+		logger: logger,
+		Level: level,
+		Prefix: prefix,
+	}
+}
+
 func setupLoggerWithBuffer(level LogLevel, prefix string) (*Logger, *bytes.Buffer) {
 	var buf bytes.Buffer
-	logger := NewLogger(&buf, level, "")
+	logger := NewTestLogger(&buf, level, prefix)
 	return logger, &buf
 }
 
@@ -99,4 +111,27 @@ func TestDEBUGStructured(t *testing.T) {
 	logOutput := buf.String()
 	VerifyLogFormat(t, logOutput, "userID", "12345")
 	VerifyLogFormat(t, logOutput, "action", "debug")
+}
+
+func TestLogFileWriting(t *testing.T){
+	tmpFile, err := os.CreateTemp("", "logs_*.log")
+	if err != nil {
+		t.Fatalf("Creating a temp file failed : %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	logger := NewLogger(INFO, "Test")
+	logger.SetOutput(tmpFile)
+	testMessage := "TestXYZ"
+	logger.Info(testMessage)
+	if err := tmpFile.Sync(); err != nil {
+		t.Fatalf("Failed to sync file: %v", err)
+	}
+	content, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("Unable to read log file: %v", err)
+	}
+	if !strings.Contains(string(content), testMessage) {
+		t.Errorf("Log file is either empty or does not contain any message")
+	}
 }

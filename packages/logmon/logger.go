@@ -1,10 +1,11 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"encoding/json"
+	"os"
 )
 
 type LogLevel int
@@ -21,12 +22,18 @@ type Logger struct{
 	Prefix string
 }
 
-func NewLogger(out io.Writer,level LogLevel, prefix string) *Logger {
+func NewLogger(level LogLevel, prefix string) *Logger {
+	logFile, err := os.OpenFile("logs.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 06666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	logger := log.New(logFile, prefix, log.LstdFlags)
 	return &Logger{
-		logger: log.New(out, prefix, log.LstdFlags),
+		logger: logger,
 		Level: level,
 		Prefix: prefix,
 	}
+	
 }
 
 func (l* Logger) SetOutput(w io.Writer) {
